@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Config {
+  id              Int      @id @default(1)
+  eventName       String   @default("Bazar Digital 2026")
+  couponPrice     Float    @default(10000)
+  totalCoupons    Int      @default(1000)
+  couponsSold     Int      @default(0)
+  isOpen          Boolean  @default(true)
+  bankName        String   @default("BCA")
+  bankAccount     String   @default("1234567890")
+  bankAccountName String   @default("Panitia Bazar")
+  qrisUrl         String?
+  csWhatsapp      String   @default("6281234567890")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  buyerName       String
+  buyerWa         String
+  buyerEmail      String?
+  notes           String?
+  quantity        Int
+  totalAmount     Float
+  paymentMethod   String   // "QRIS" or "TRANSFER"
+  paymentProofUrl String?  // URL to uploaded image for transfer
+  status          String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tickets         Ticket[]
+}
+
+model Ticket {
+  id            String      @id @default(uuid())
+  code          String      @unique // BZR-2026-XXXXXX
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  isRedeemed    Boolean     @default(false)
+  redeemedAt    DateTime?
+  createdAt     DateTime    @default(now())
+}
