@@ -127,7 +127,7 @@ export default function TransactionList({ initialTransactions }: { initialTransa
                         </button>
                       </>
                     )}
-                    {tx.status === "VERIFIED" && tx.tickets && tx.tickets.length > 0 && (
+                    {tx.status === "VERIFIED" && (
                       <ThermalReceipt data={{
                         transactionId: tx.id,
                         buyerName: tx.buyerName,
