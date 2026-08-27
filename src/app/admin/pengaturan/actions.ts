@@ -8,6 +8,7 @@ export async function updateSettings(formData: FormData) {
   const bankAccount = formData.get("bankAccount") as string;
   const bankAccountName = formData.get("bankAccountName") as string;
   const csWhatsapp = formData.get("csWhatsapp") as string;
+  const qrisUrl = formData.get("qrisUrl") as string | null;
 
   await prisma.config.update({
     where: { id: 1 },
@@ -16,6 +17,7 @@ export async function updateSettings(formData: FormData) {
       bankAccount,
       bankAccountName,
       csWhatsapp,
+      qrisUrl: qrisUrl || null,
     },
   });
 
