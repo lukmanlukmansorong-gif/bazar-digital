@@ -6,6 +6,7 @@ export const revalidate = 0;
 export default async function TransaksiPage() {
   const transactions = await prisma.transaction.findMany({
     orderBy: { createdAt: "desc" },
+    include: { tickets: true },
   });
 
   return (

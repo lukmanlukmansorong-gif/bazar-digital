@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, XCircle } from "lucide-react";
+import ThermalReceipt from "@/components/ThermalReceipt";
+
+interface Ticket {
+  id: string;
+  code: string;
+  isRedeemed: boolean;
+}
 
 interface Transaction {
   id: string;
@@ -13,6 +20,7 @@ interface Transaction {
   paymentMethod: string;
   status: string;
   createdAt: string | Date;
+  tickets?: Ticket[];
 }
 
 export default function TransactionList({ initialTransactions }: { initialTransactions: Transaction[] }) {
@@ -108,16 +116,29 @@ export default function TransactionList({ initialTransactions }: { initialTransa
                   </div>
                 </td>
                 <td className="p-4 text-right">
-                  {tx.status === "WAITING_VERIFICATION" && (
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => handleAction(tx.id, "VERIFY")} className="p-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg" title="Verifikasi Pembayaran">
-                        <CheckCircle className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => handleAction(tx.id, "REJECT")} className="p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg" title="Tolak Pembayaran">
-                        <XCircle className="w-5 h-5" />
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex justify-end gap-2">
+                    {tx.status === "WAITING_VERIFICATION" && (
+                      <>
+                        <button onClick={() => handleAction(tx.id, "VERIFY")} className="p-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg" title="Verifikasi Pembayaran">
+                          <CheckCircle className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => handleAction(tx.id, "REJECT")} className="p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg" title="Tolak Pembayaran">
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                    {tx.status === "VERIFIED" && tx.tickets && tx.tickets.length > 0 && (
+                      <ThermalReceipt data={{
+                        transactionId: tx.id,
+                        buyerName: tx.buyerName,
+                        buyerWa: tx.buyerWa,
+                        quantity: tx.quantity,
+                        totalAmount: tx.totalAmount,
+                        paymentMethod: tx.paymentMethod,
+                        tickets: tx.tickets,
+                      }} />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
