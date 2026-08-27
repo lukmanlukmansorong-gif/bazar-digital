@@ -27,8 +27,7 @@ export default function AdminLogin() {
       setError("Username atau password salah");
       setLoading(false);
     } else {
-      router.push("/admin/dashboard");
-      router.refresh();
+      window.location.href = "/admin/dashboard";
     }
   };
 

@@ -22,8 +22,9 @@ const handler = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: "bazar-digital-secret-key-2026",
+  secret: process.env.NEXTAUTH_SECRET || "bazar-digital-secret-key-2026",
 });
 
 export { handler as GET, handler as POST };
