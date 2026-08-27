@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Ticket, FileText, ScanLine, Settings, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { LogOut, LayoutDashboard, Ticket, FileText, ScanLine, Settings } from "lucide-react";
 
 const links = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -43,7 +42,10 @@ export default function AdminSidebar() {
       </nav>
       <div className="p-4 border-t">
         <button 
-          onClick={() => signOut()}
+          onClick={async () => {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            window.location.href = '/admin/login';
+          }}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-500 hover:bg-red-50 transition-all font-medium"
         >
           <LogOut className="w-5 h-5" />
