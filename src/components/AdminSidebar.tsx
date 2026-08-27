@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, LayoutDashboard, Ticket, FileText, ScanLine, Settings } from "lucide-react";
+import { LogOut, LayoutDashboard, Ticket, FileText, ScanLine, Settings, ShoppingBag } from "lucide-react";
 
 const links = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "Kasir Tunai (POS)", href: "/admin/kasir", icon: ShoppingBag },
   { name: "Kupon & Stok", href: "/admin/kupon", icon: Ticket },
   { name: "Transaksi", href: "/admin/transaksi", icon: FileText },
   { name: "Scanner", href: "/admin/scanner", icon: ScanLine },
