@@ -62,6 +62,16 @@ export default function TicketClient({ transaction }: TicketClientProps) {
     );
   }
 
+  if (transaction.status === "REFUNDED") {
+    return (
+      <div className="bg-card text-card-foreground shadow-xl rounded-2xl p-8 border text-center max-w-lg mx-auto">
+        <XCircle className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-2 text-purple-700">Pesanan Dibatalkan (Refund)</h2>
+        <p className="text-muted-foreground">Transaksi ini telah dibatalkan / di-refund oleh panitia. Tiket tidak lagi berlaku untuk penukaran kupon.</p>
+      </div>
+    );
+  }
+
   if (transaction.status === "REJECTED") {
     return (
       <div className="bg-card text-card-foreground shadow-xl rounded-2xl p-8 border text-center max-w-lg mx-auto">

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth/next";
+import { isAdminAuthenticated } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const { code, action } = body; // action: "CHECK" or "REDEEM"
@@ -16,6 +16,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (!ticket) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+
+    // Check if parent transaction is refunded
+    if (ticket.transaction.status === "REFUNDED") {
+      return NextResponse.json({
+        ticket,
+        status: "REFUNDED",
+        buyerName: ticket.transaction.buyerName,
+        error: "Kupon ini telah DIBATALKAN / DIBERIKAN REFUND oleh panitia dan tidak dapat digunakan."
+      });
+    }
 
     if (action === "CHECK") {
       return NextResponse.json({ 

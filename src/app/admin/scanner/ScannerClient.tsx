@@ -161,6 +161,12 @@ export default function ScannerClient() {
                       <h3 className="text-2xl font-bold">Kupon Valid</h3>
                       <p>Kupon dapat digunakan.</p>
                     </>
+                  ) : result.status === "REFUNDED" ? (
+                    <div className="text-purple-800">
+                      <XCircle className="w-16 h-16 mx-auto mb-2 text-purple-600" />
+                      <h3 className="text-2xl font-bold">Kupon Dibatalkan (Refund)</h3>
+                      <p className="text-sm mt-1">Kupon ini telah di-refund oleh panitia dan tidak dapat digunakan.</p>
+                    </div>
                   ) : (
                     <>
                       <XCircle className="w-16 h-16 mx-auto mb-2" />
