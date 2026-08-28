@@ -1,12 +1,22 @@
 import { cookies } from 'next/headers'
+import prisma from '@/lib/db'
 
-const ADMIN_USERNAME = 'admin'
-const ADMIN_PASSWORD = 'bazar2026'
+const DEFAULT_ADMIN_USERNAME = 'admin'
+const DEFAULT_ADMIN_PASSWORD = 'bazar2026'
 const SESSION_COOKIE = 'admin_session'
 const SESSION_VALUE = 'authenticated_admin_2026'
 
-export function checkAdminCredentials(username: string, password: string): boolean {
-  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD
+export async function checkAdminCredentials(username: string, password: string): Promise<boolean> {
+  try {
+    const config = await prisma.config.findUnique({ where: { id: 1 } })
+    const validUsername = config?.adminUsername || DEFAULT_ADMIN_USERNAME
+    const validPassword = config?.adminPassword || DEFAULT_ADMIN_PASSWORD
+
+    return username === validUsername && password === validPassword
+  } catch (error) {
+    console.error("Auth check error:", error)
+    return username === DEFAULT_ADMIN_USERNAME && password === DEFAULT_ADMIN_PASSWORD
+  }
 }
 
 export async function setAdminSession() {

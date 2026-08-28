@@ -20,6 +20,8 @@ model Config {
   bankAccountName String   @default("Panitia Bazar")
   qrisUrl         String?
   csWhatsapp      String   @default("6281234567890")
+  adminUsername   String   @default("admin")
+  adminPassword   String   @default("bazar2026")
 }
 
 model Transaction {

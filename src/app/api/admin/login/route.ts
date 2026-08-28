@@ -5,7 +5,8 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json()
     
-    if (checkAdminCredentials(username, password)) {
+    const isValid = await checkAdminCredentials(username, password)
+    if (isValid) {
       await setAdminSession()
       return NextResponse.json({ success: true })
     }
