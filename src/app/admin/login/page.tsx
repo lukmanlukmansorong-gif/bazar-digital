@@ -21,10 +21,11 @@ export default function AdminLogin() {
         body: JSON.stringify({ username, password }),
       });
 
-      if (res.ok) {
-        window.location.href = "/admin/dashboard";
+      const data = await res.json();
+      if (res.ok && data.success) {
+        window.location.href = data.redirectTo || "/admin/dashboard";
       } else {
-        setError("Username atau password salah");
+        setError(data.message || "Username atau password salah");
         setLoading(false);
       }
     } catch {
@@ -36,7 +37,10 @@ export default function AdminLogin() {
   return (
     <div className="flex justify-center items-center h-full min-h-[60vh]">
       <div className="w-full max-w-md bg-card p-8 rounded-2xl shadow-xl border">
-        <h1 className="text-2xl font-bold text-center mb-6">Login Admin</h1>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold">Login Portal</h1>
+          <p className="text-xs text-muted-foreground mt-1">Masuk sebagai Administrator atau Operator Penjualan Online</p>
+        </div>
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm text-center">
             {error}

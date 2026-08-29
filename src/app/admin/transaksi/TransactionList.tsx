@@ -23,7 +23,17 @@ interface Transaction {
   tickets?: Ticket[];
 }
 
-export default function TransactionList({ initialTransactions }: { initialTransactions: Transaction[] }) {
+interface TransactionListProps {
+  initialTransactions: Transaction[];
+  isReadOnly?: boolean;
+  operatorName?: string;
+}
+
+export default function TransactionList({ 
+  initialTransactions, 
+  isReadOnly = false,
+  operatorName 
+}: TransactionListProps) {
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -36,6 +46,7 @@ export default function TransactionList({ initialTransactions }: { initialTransa
   });
 
   const handleAction = async (id: string, action: "VERIFY" | "REJECT") => {
+    if (isReadOnly) return;
     const actionText = action === "VERIFY" ? "Verifikasi & Terbitkan Kupon" : "Tolak Pembayaran";
     if (!confirm(`Apakah Anda yakin ingin ${actionText} untuk transaksi ini?`)) return;
     
@@ -59,6 +70,7 @@ export default function TransactionList({ initialTransactions }: { initialTransa
   };
 
   const handleRefund = async (id: string, buyerName: string, quantity: number) => {
+    if (isReadOnly) return;
     const confirmRefund = confirm(
       `⚠️ KONFIRMASI REFUND / PEMBATALAN\n\n` +
       `Pembeli: ${buyerName}\n` +
@@ -94,6 +106,21 @@ export default function TransactionList({ initialTransactions }: { initialTransa
 
   return (
     <div className="space-y-6">
+      {isReadOnly && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">ℹ️</span>
+            <div>
+              <p className="font-bold">Akses Operator Online: {operatorName || "Operator"}</p>
+              <p className="text-xs text-blue-700">Anda memiliki izin untuk melihat riwayat dan status pembelian secara langsung (Read-Only).</p>
+            </div>
+          </div>
+          <span className="text-xs bg-blue-200/80 text-blue-900 font-semibold px-2.5 py-1 rounded-full">
+            Hanya Lihat
+          </span>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-4 justify-between bg-card p-4 rounded-xl border">
         <input 
           type="text" 
@@ -158,61 +185,83 @@ export default function TransactionList({ initialTransactions }: { initialTransa
                 </td>
                 <td className="p-4 text-right">
                   <div className="flex justify-end items-center gap-2">
-                    {/* Waiting Verification Actions */}
-                    {tx.status === "WAITING_VERIFICATION" && (
+                    {/* Read-Only Operator View */}
+                    {isReadOnly ? (
+                      <div className="flex items-center gap-2">
+                        {tx.status === "VERIFIED" && (
+                          <ThermalReceipt data={{
+                            transactionId: tx.id,
+                            buyerName: tx.buyerName,
+                            buyerWa: tx.buyerWa,
+                            quantity: tx.quantity,
+                            totalAmount: tx.totalAmount,
+                            paymentMethod: tx.paymentMethod,
+                            tickets: tx.tickets,
+                          }} />
+                        )}
+                        <span className="text-xs text-muted-foreground italic px-2 py-1 bg-muted rounded">
+                          Hanya Lihat
+                        </span>
+                      </div>
+                    ) : (
                       <>
-                        <button 
-                          onClick={() => handleAction(tx.id, "VERIFY")} 
-                          disabled={actionLoading === tx.id}
-                          className="p-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors" 
-                          title="Verifikasi Pembayaran"
-                        >
-                          <CheckCircle className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={() => handleAction(tx.id, "REJECT")} 
-                          disabled={actionLoading === tx.id}
-                          className="p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg transition-colors" 
-                          title="Tolak Pembayaran"
-                        >
-                          <XCircle className="w-5 h-5" />
-                        </button>
-                      </>
-                    )}
+                        {/* Admin Waiting Verification Actions */}
+                        {tx.status === "WAITING_VERIFICATION" && (
+                          <>
+                            <button 
+                              onClick={() => handleAction(tx.id, "VERIFY")} 
+                              disabled={actionLoading === tx.id}
+                              className="p-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors" 
+                              title="Verifikasi Pembayaran"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => handleAction(tx.id, "REJECT")} 
+                              disabled={actionLoading === tx.id}
+                              className="p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg transition-colors" 
+                              title="Tolak Pembayaran"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
 
-                    {/* Verified Actions: Print + Refund */}
-                    {tx.status === "VERIFIED" && (
-                      <>
-                        <ThermalReceipt data={{
-                          transactionId: tx.id,
-                          buyerName: tx.buyerName,
-                          buyerWa: tx.buyerWa,
-                          quantity: tx.quantity,
-                          totalAmount: tx.totalAmount,
-                          paymentMethod: tx.paymentMethod,
-                          tickets: tx.tickets,
-                        }} />
-                        <button
-                          onClick={() => handleRefund(tx.id, tx.buyerName, tx.quantity)}
-                          disabled={actionLoading === tx.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg transition-colors text-xs font-bold"
-                          title="Refund & Kembalikan Stok Kupon"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          Refund
-                        </button>
-                      </>
-                    )}
+                        {/* Admin Verified Actions: Print + Refund */}
+                        {tx.status === "VERIFIED" && (
+                          <>
+                            <ThermalReceipt data={{
+                              transactionId: tx.id,
+                              buyerName: tx.buyerName,
+                              buyerWa: tx.buyerWa,
+                              quantity: tx.quantity,
+                              totalAmount: tx.totalAmount,
+                              paymentMethod: tx.paymentMethod,
+                              tickets: tx.tickets,
+                            }} />
+                            <button
+                              onClick={() => handleRefund(tx.id, tx.buyerName, tx.quantity)}
+                              disabled={actionLoading === tx.id}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg transition-colors text-xs font-bold"
+                              title="Refund & Kembalikan Stok Kupon"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Refund
+                            </button>
+                          </>
+                        )}
 
-                    {/* Pending Actions: Allow direct cancel/refund */}
-                    {tx.status === "PENDING" && (
-                      <button
-                        onClick={() => handleRefund(tx.id, tx.buyerName, tx.quantity)}
-                        disabled={actionLoading === tx.id}
-                        className="text-xs text-muted-foreground hover:text-red-500 font-medium"
-                      >
-                        Batalkan
-                      </button>
+                        {/* Admin Pending Actions: Allow direct cancel/refund */}
+                        {tx.status === "PENDING" && (
+                          <button
+                            onClick={() => handleRefund(tx.id, tx.buyerName, tx.quantity)}
+                            disabled={actionLoading === tx.id}
+                            className="text-xs text-muted-foreground hover:text-red-500 font-medium"
+                          >
+                            Batalkan
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </td>
@@ -229,3 +278,4 @@ export default function TransactionList({ initialTransactions }: { initialTransa
     </div>
   );
 }
+
