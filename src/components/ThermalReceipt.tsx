@@ -83,13 +83,50 @@ export default function ThermalReceipt({ data }: { data: ReceiptData }) {
           .subtitle { font-size: 10px; color: #555; }
           .ticket-box {
             border: 1px dashed #000;
-            padding: 8px;
-            margin: 6px 0;
+            padding: 6px 6px;
+            margin: 8px 0;
             text-align: center;
             page-break-inside: avoid;
           }
-          .ticket-code { font-size: 14px; font-weight: bold; letter-spacing: 1px; margin: 4px 0; }
-          .qr-container { display: flex; justify-content: center; margin: 6px 0; }
+          .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+          }
+          .buyer-tag {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: left;
+          }
+          .ticket-num {
+            font-size: 9px;
+            color: #333;
+          }
+          .ticket-code {
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin: 4px 0 2px 0;
+          }
+          .qr-container {
+            display: flex;
+            justify-content: center;
+            margin: 6px 0;
+          }
+          .ticket-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dotted #666;
+            padding-top: 4px;
+            margin-top: 4px;
+            font-size: 9px;
+          }
           .footer { font-size: 9px; text-align: center; margin-top: 10px; color: #666; }
           @media print {
             body { width: 80mm; }
@@ -150,9 +187,9 @@ export default function ThermalReceipt({ data }: { data: ReceiptData }) {
         
         ${ticketsToPrint.map((ticket, i) => `
           <div class="ticket-box">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-              <p style="font-size:10px; color:#666; text-align: left;">Tiket #${i + 1}/${data.quantity}</p>
-              <p style="font-size:10px; font-weight:bold; color:#000; text-align: right; max-width: 50%; word-break: break-word;">${data.buyerName}</p>
+            <div class="ticket-header">
+              <span class="buyer-tag">👤 ${data.buyerName}</span>
+              <span class="ticket-num">#${i + 1}/${data.quantity}</span>
             </div>
             <p class="ticket-code">${ticket.code}</p>
             <div class="qr-container">
@@ -161,8 +198,11 @@ export default function ThermalReceipt({ data }: { data: ReceiptData }) {
                    width="120" height="120"
                    style="image-rendering: pixelated;" />
             </div>
-            <p style="font-size:9px; color:#888;">Berlaku 1x penukaran kupon</p>
-            ${ticket.isRedeemed ? '<p style="font-size:12px; font-weight:bold; color:red;">*** SUDAH DIGUNAKAN ***</p>' : ''}
+            <div class="ticket-footer">
+              <span class="bold">A.n: ${data.buyerName}</span>
+              <span>1x Penukaran</span>
+            </div>
+            ${ticket.isRedeemed ? '<p style="font-size:12px; font-weight:bold; color:red; margin-top:3px;">*** SUDAH DIGUNAKAN ***</p>' : ''}
           </div>
         `).join('')}
         

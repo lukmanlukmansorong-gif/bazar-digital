@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Download, Share2, Clock, CheckCircle, XCircle } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import ThermalReceipt from "@/components/ThermalReceipt";
 
 interface Ticket {
   id: string;
@@ -15,6 +16,9 @@ interface Ticket {
 interface Transaction {
   id: string;
   buyerName: string;
+  buyerWa?: string;
+  totalAmount?: number;
+  paymentMethod?: string;
   quantity: number;
   status: string;
   tickets: Ticket[];
@@ -47,7 +51,7 @@ export default function TicketClient({ transaction }: TicketClientProps) {
   };
 
   const handleShare = (ticketCode: string) => {
-    const text = `Halo! Ini E-Ticket Bazar Digital saya.\nKode Tiket: ${ticketCode}\nTerima kasih!`;
+    const text = `Halo! Ini E-Ticket Bazar Digital saya (${transaction.buyerName}).\nKode Tiket: ${ticketCode}\nTerima kasih!`;
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, "_blank");
   };
@@ -84,11 +88,24 @@ export default function TicketClient({ transaction }: TicketClientProps) {
 
   return (
     <div className="space-y-8">
-      <div className="bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl flex items-center gap-3">
-        <CheckCircle className="w-6 h-6 flex-shrink-0" />
-        <div>
-          <p className="font-bold">Pembayaran Berhasil!</p>
-          <p className="text-sm">Berikut adalah E-Ticket Anda. Tunjukkan QR Code ini kepada panitia saat acara berlangsung.</p>
+      <div className="bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <CheckCircle className="w-6 h-6 flex-shrink-0" />
+          <div>
+            <p className="font-bold">Pembayaran Berhasil!</p>
+            <p className="text-sm">E-Ticket atas nama <span className="font-semibold underline">{transaction.buyerName}</span>. Tunjukkan QR Code ini kepada panitia saat acara berlangsung.</p>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <ThermalReceipt data={{
+            transactionId: transaction.id,
+            buyerName: transaction.buyerName,
+            buyerWa: transaction.buyerWa || "-",
+            quantity: transaction.quantity,
+            totalAmount: transaction.totalAmount || 0,
+            paymentMethod: transaction.paymentMethod || "ONLINE",
+            tickets: transaction.tickets,
+          }} />
         </div>
       </div>
 
@@ -106,7 +123,7 @@ export default function TicketClient({ transaction }: TicketClientProps) {
                   <div className="space-y-2">
                     <div>
                       <p className="text-xs text-gray-400">Nama Pemesan</p>
-                      <p className="font-bold text-sm truncate">{transaction.buyerName}</p>
+                      <p className="font-bold text-sm truncate text-primary">{transaction.buyerName}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Kode Tiket</p>
@@ -120,10 +137,13 @@ export default function TicketClient({ transaction }: TicketClientProps) {
                 </div>
               </div>
 
-              <div className="bg-primary/5 p-6 flex flex-col items-center justify-center min-w-[160px]">
-                <div className="bg-white p-2 rounded-lg shadow-sm border">
+              <div className="bg-primary/5 p-6 flex flex-col items-center justify-center min-w-[160px] relative">
+                <div className="bg-white p-2 rounded-lg shadow-sm border mb-2">
                   <QRCodeSVG value={ticket.code} size={100} level="M" />
                 </div>
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full text-center truncate max-w-[140px]" title={transaction.buyerName}>
+                  👤 {transaction.buyerName}
+                </span>
                 {ticket.isRedeemed && (
                   <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
                     <span className="text-white font-black text-2xl -rotate-12 border-4 border-white px-4 py-2 rounded-xl">DIGUNAKAN</span>
