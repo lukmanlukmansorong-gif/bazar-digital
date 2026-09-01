@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Minus, CreditCard, QrCode } from "lucide-react";
+import { Plus, Minus, CreditCard, QrCode, Pencil } from "lucide-react";
 
 interface CheckoutFormProps {
   price: number;
@@ -11,6 +11,9 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ price, maxStock }: CheckoutFormProps) {
   const [qty, setQty] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [wa, setWa] = useState("");
   const [email, setEmail] = useState("");
@@ -19,9 +22,35 @@ export default function CheckoutForm({ price, maxStock }: CheckoutFormProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const clampQty = (val: number) => {
+    return Math.max(1, Math.min(val, maxStock));
+  };
+
   const handleQtyChange = (val: number) => {
-    if (val >= 1 && val <= maxStock) {
-      setQty(val);
+    setQty(clampQty(val));
+  };
+
+  const startEditing = () => {
+    setEditValue(String(qty));
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+
+  const finishEditing = () => {
+    const parsed = parseInt(editValue, 10);
+    if (!isNaN(parsed) && parsed >= 1) {
+      setQty(clampQty(parsed));
+    }
+    setIsEditing(false);
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      finishEditing();
+    }
+    if (e.key === "Escape") {
+      setIsEditing(false);
     }
   };
 
@@ -64,39 +93,94 @@ export default function CheckoutForm({ price, maxStock }: CheckoutFormProps) {
             <p className="font-medium">Kupon Bazar Digital 2026</p>
             <p className="text-muted-foreground text-sm">Rp {price.toLocaleString('id-ID')} / kupon</p>
           </div>
-          <div className="flex items-center gap-4 bg-background border rounded-lg p-1">
-            <button 
-              type="button"
-              onClick={() => handleQtyChange(qty - 1)}
-              disabled={qty <= 1}
-              className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors"
-            >
-              <Minus className="w-5 h-5" />
-            </button>
-            <span className="w-8 text-center font-semibold text-lg">{qty}</span>
-            <button 
-              type="button"
-              onClick={() => handleQtyChange(qty + 1)}
-              disabled={qty >= maxStock}
-              className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0 bg-background border rounded-lg p-1">
+              <button 
+                type="button"
+                onClick={() => handleQtyChange(qty - 10)}
+                disabled={qty <= 1}
+                className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors text-xs font-bold text-muted-foreground"
+                title="Kurangi 10"
+              >
+                -10
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleQtyChange(qty - 1)}
+                disabled={qty <= 1}
+                className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors"
+              >
+                <Minus className="w-5 h-5" />
+              </button>
+              {isEditing ? (
+                <input
+                  ref={inputRef}
+                  type="number"
+                  min={1}
+                  max={maxStock}
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={finishEditing}
+                  onKeyDown={handleEditKeyDown}
+                  className="w-20 text-center font-semibold text-lg bg-primary/10 border-2 border-primary rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  className="group relative w-20 text-center font-semibold text-lg py-1 rounded-md hover:bg-primary/10 transition-colors cursor-text"
+                  title="Klik untuk edit jumlah"
+                >
+                  {qty}
+                  <Pencil className="w-3 h-3 absolute top-0.5 right-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              )}
+              <button 
+                type="button"
+                onClick={() => handleQtyChange(qty + 1)}
+                disabled={qty >= maxStock}
+                className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleQtyChange(qty + 10)}
+                disabled={qty >= maxStock}
+                className="p-2 hover:bg-muted rounded-md disabled:opacity-50 transition-colors text-xs font-bold text-muted-foreground"
+                title="Tambah 10"
+              >
+                +10
+              </button>
+            </div>
           </div>
         </div>
         <div className="flex gap-2 mt-4 flex-wrap">
-          {[1, 2, 5, 10].map(val => (
+          {[1, 2, 5, 10, 20, 50, 100].map(val => (
             <button
               key={val}
               type="button"
-              onClick={() => handleQtyChange(val)}
-              disabled={val > maxStock}
-              className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors disabled:opacity-50"
+              onClick={() => handleQtyChange(qty + val)}
+              disabled={qty + val > maxStock}
+              className={`px-4 py-2 rounded-full border text-sm font-medium hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors disabled:opacity-50 ${val >= 50 ? 'bg-primary/5 border-primary/30' : ''}`}
             >
               +{val}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={startEditing}
+            className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors border-dashed flex items-center gap-1.5"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Ketik Jumlah
+          </button>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Stok tersedia: <span className="font-semibold">{maxStock.toLocaleString('id-ID')}</span> kupon
+          {qty > 1 && <span> · Dipilih: <span className="font-semibold text-primary">{qty.toLocaleString('id-ID')}</span> kupon</span>}
+        </p>
       </section>
 
       {/* Buyer Info Section */}

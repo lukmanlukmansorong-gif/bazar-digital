@@ -15,29 +15,31 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (transaction.status !== "WAITING_VERIFICATION") return NextResponse.json({ error: "Cannot process" }, { status: 400 });
 
     if (action === "VERIFY") {
-      await prisma.$transaction(async (tx) => {
-        await tx.transaction.update({
-          where: { id: transaction.id },
-          data: { status: "VERIFIED" }
-        });
-
-        const config = await tx.config.findUnique({ where: { id: 1 } });
-        await tx.config.update({
-          where: { id: 1 },
-          data: { couponsSold: config!.couponsSold + transaction.quantity }
-        });
-
-        // Generate tickets
-        for (let i = 0; i < transaction.quantity; i++) {
-          const code = `BZR-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-          await tx.ticket.create({
-            data: {
-              code,
-              transactionId: transaction.id
-            }
-          });
-        }
+      // Use sequential queries instead of $transaction to avoid Neon pooler issues
+      await prisma.transaction.update({
+        where: { id: transaction.id },
+        data: { status: "VERIFIED" }
       });
+
+      const config = await prisma.config.findUnique({ where: { id: 1 } });
+      if (config) {
+        await prisma.config.update({
+          where: { id: 1 },
+          data: { couponsSold: config.couponsSold + transaction.quantity }
+        });
+      }
+
+      // Generate tickets using createMany for better performance
+      const ticketData = [];
+      for (let i = 0; i < transaction.quantity; i++) {
+        const code = `BZR-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        ticketData.push({
+          code,
+          transactionId: transaction.id
+        });
+      }
+      await prisma.ticket.createMany({ data: ticketData });
+
     } else if (action === "REJECT") {
       await prisma.transaction.update({
         where: { id: transaction.id },
@@ -47,7 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Verify route error:", error);
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

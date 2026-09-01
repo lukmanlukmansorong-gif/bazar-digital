@@ -42,13 +42,15 @@ export default function PaymentClient({ transaction, config }: PaymentClientProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proofUrl: "dummy-proof-url" })
       });
+      const data = await res.json();
       if (res.ok) {
         router.push(`/kupon/${transaction.id}`);
       } else {
-        alert("Failed to process payment");
+        alert("Gagal memproses pembayaran: " + (data.error || "Unknown error"));
       }
-    } catch {
-      alert("Error processing payment");
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Error memproses pembayaran. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
