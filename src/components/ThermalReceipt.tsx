@@ -150,7 +150,10 @@ export default function ThermalReceipt({ data }: { data: ReceiptData }) {
         
         ${ticketsToPrint.map((ticket, i) => `
           <div class="ticket-box">
-            <p style="font-size:10px; color:#666;">Tiket #${i + 1} dari ${data.quantity}</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+              <p style="font-size:10px; color:#666; text-align: left;">Tiket #${i + 1}/${data.quantity}</p>
+              <p style="font-size:10px; font-weight:bold; color:#000; text-align: right; max-width: 50%; word-break: break-word;">${data.buyerName}</p>
+            </div>
             <p class="ticket-code">${ticket.code}</p>
             <div class="qr-container">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(ticket.code)}" 
